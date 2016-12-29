@@ -6,6 +6,26 @@
 
     $ gem install pdpoke
 
+## Configuration
+
+You'll need to create `$HOME/.pdpoke.yaml` with some basic info in it.
+
+    ---
+    account: your-pagerduty-subdomain
+    apikey: api-key-from-pagerduty-account
+    teams:
+      - ID_of_team_1
+      - ID_of_team_2
+
+If your PagerDuty URL is `https://yourcompany.pagerduty.com/`, the `account`
+setting should be `yourcompany`.
+
+The API key you'll need to generate via the API Keys page in your PagerDuty
+account.
+
+The team IDs you can extract from the PagerDuty web URLs, or via the API.
+Don't use the team name; it won't work.
+
 ## Usage
 
 ### export JSON of all incidents since November 1

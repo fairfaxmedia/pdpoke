@@ -2,6 +2,7 @@ require 'pager_duty/connection'
 require 'thor'
 require 'yaml'
 require "pdpoke/version"
+require 'pp'
 
 module PDPoke
   class Context
@@ -41,6 +42,7 @@ module PDPoke
     desc 'incidents', 'retrieve incidents for the configured team(s)'
     method_option :since, desc: 'start of date range to query (ISO8601 format)', default: Date.today.prev_week.iso8601
     method_option :until, desc: 'end of date range to query (ISO8601 format)', default: Date.today.iso8601
+    method_option :fieldmatch, desc: 'only return records where a specified field matches a provided regex', required: false, type: :array
     def incidents
       all_incidents = retrieve_incidents(options)
       puts all_incidents.to_json
@@ -49,6 +51,7 @@ module PDPoke
     desc 'incidents_around', 'retrieve incidents within N minutes of a time of day'
     method_option :since,  desc: 'start of date range to query (ISO8601 format)', default: Date.today.prev_week.iso8601
     method_option :until,  desc: 'end of date range to query (ISO8601 format)', default: Date.today.iso8601
+    method_option :fieldmatch, desc: 'only return records where a specified field matches a provided regex', required: false, type: :array
     method_option :hour,   desc: 'target minute', required: true, type: :numeric
     method_option :minute, desc: 'target hour', required: true, type: :numeric
     method_option :width,  desc: 'search for incidents within N minutes of the target', default: 5, type: :numeric
@@ -71,6 +74,7 @@ module PDPoke
     desc 'incident_map', 'generate a 2D map of time-binned incident occurrences'
     method_option :since, desc: 'start of date range to query (ISO8601 format)', default: Date.today.prev_week.iso8601
     method_option :until, desc: 'end of date range to query (ISO8601 format)', default: Date.today.iso8601
+    method_option :fieldmatch, desc: 'only return records where a specified field matches a provided regex', required: false, type: :array
     method_option :binsize, desc: 'size of the time bins, in minutes', default: 5, type: :numeric
     def incident_map
       all_incidents = retrieve_incidents(options)
@@ -118,8 +122,29 @@ module PDPoke
         STDERR.puts "exception encountered: #{e.class}: #{e.message}"
         exit 1
       end
+      if options[:fieldmatch]
+        all_incidents.keep_if do |incident|
+          match = true
+          options[:fieldmatch].each do |fieldmatch|
+            rulematch = true
+            key,value = fieldmatch.split('~')
+            positive = true
+            if key.match(/\!$/)
+              positive = false
+              key.chop!
+            end
+            path = key.split('/')
+            field = incident.dig(*path)
+            rulematch &&= ( field && field.match(/#{value}/) )
+            rulematch = !rulematch if !positive
+            match &&= !!rulematch
+          end
+          match
+        end
+      end
       all_incidents
     end
 
-  end
-end
+  end #class
+
+end #module

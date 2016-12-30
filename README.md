@@ -44,6 +44,27 @@ Don't use the team name; it won't work.
 
 This would be better if `pdpoke` simply invoked `colourcard` itself. Will get there...
 
+### filtering incidents by arbitrary fields
+
+`pdpoke`, via the `--fieldmatch` option, supports a basic regex match on
+almost any fields in the JSON blob returned by the PagerDuty REST API.
+The purpose here is to quickly narrow down what you want; serious
+manipulation still belongs elsewhere in tools like `jq`.
+
+Filtering rules take the form of a field specification with each level
+of hash nesting delimited by a slash, followed by `~` or `!~` (the
+latter being a negative match), followed by a regex to match. Some
+examples:
+
+* `--fieldmatch service/summary~Synthetics` would match any incident with
+the text `Synthetics` in its service name
+
+* `--fieldmatch description!~free space` would match any incident that did
+  NOT contain the text `free space` in its description field
+
+You can specify as many filter rules as you like. `AND` logic is
+applied if multiple rules are specified, ie. they must all match.
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/fairfaxmedia/pdpoke.

@@ -2,7 +2,6 @@ require 'pager_duty/connection'
 require 'thor'
 require 'yaml'
 require "pdpoke/version"
-require 'pp'
 
 module PDPoke
   class Context
@@ -48,7 +47,7 @@ module PDPoke
       puts all_incidents.to_json
     end
 
-    desc 'incidents_around', 'retrieve incidents within N minutes of a time of day'
+    desc 'incidents_around', 'retrieve incidents within N minutes of a time of day in the local timezone'
     method_option :since,  desc: 'start of date range to query (ISO8601 format)', default: Date.today.prev_week.iso8601
     method_option :until,  desc: 'end of date range to query (ISO8601 format)', default: Date.today.iso8601
     method_option :fieldmatch, desc: 'only return records where a specified field matches a provided regex', required: false, type: :array
@@ -58,8 +57,8 @@ module PDPoke
     def incidents_around
       all_incidents = retrieve_incidents(options)
       all_incidents.keep_if do |incident|
-        ti = incident.created_at
-        tt = Time.gm(ti.year,ti.mon,ti.day,options[:hour],options[:minute])
+        ti = incident.created_at.localtime
+        tt = Time.local(ti.localtime.year,ti.localtime.mon,ti.localtime.day,options[:hour],options[:minute])
         width = options[:width] * 60
         ti.between?(tt-width,tt+width)
       end
@@ -80,9 +79,11 @@ module PDPoke
       all_incidents = retrieve_incidents(options)
       binsize = options[:binsize]
       bins = (0..23).map { |x| Array.new(60/binsize).fill(0) }
+      offset = Time.new.gmtoff
       all_incidents.each do |incident|
-        bin     = (incident.created_at.min / binsize).truncate
-        hour    = incident.created_at.hour
+        incident_time = incident.created_at + offset
+        bin     = (incident_time.min / binsize).truncate
+        hour    = incident_time.hour
         bins[hour][bin] += 1
       end
       step_size = 255 / ([ 1, bins.flatten.sort.max ].sort[-1])
@@ -90,7 +91,8 @@ module PDPoke
         bins[hour].each_index do |bin|
           contents = "%03d" % ( 255 - bins[hour][bin] * step_size )
           minute = bin * options[:binsize]
-          puts "#{contents} #{contents} #{contents} 255 ## #{"%02d" % hour}#{"%02d" % minute}"
+          time = "#{"%02d" % hour}#{"%02d" % minute}"
+          puts "#{contents} #{contents} #{contents} 255 ## #{time}/#{bins[hour][bin]}"
         end
       end
     end

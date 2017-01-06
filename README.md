@@ -13,6 +13,7 @@ You'll need to create `$HOME/.pdpoke.yaml` with some basic info in it.
     ---
     account: your-pagerduty-subdomain
     apikey: api-key-from-pagerduty-account
+    email: your.pagerduty@email.address
     teams:
       - ID_of_team_1
       - ID_of_team_2
@@ -26,7 +27,41 @@ PagerDuty account.
 The team IDs you can extract from the PagerDuty web URLs, or via the
 API.  Don't use the team name; it won't work.
 
+It's important to specify the email address matching your PagerDuty user
+account; this is used for finding your own PagerDuty user, which is
+required for some features to work.
+
 ## Usage
+
+### list of commands
+
+    $ pdpoke help
+
+### more detailed help for a command
+
+    $ pdpoke help oncall_days
+
+### information about your PagerDuty user account
+
+    $ pdpoke me | jq .job_title
+    "DevOps Engineer"
+
+### information about all users in your configured teams
+
+    $ pdpoke users
+
+### list days upon which you were on-call outside work hours
+
+This is intended to assist in claiming on-call compensation.
+
+    $ pdpoke oncall_days --since 2016-12-01 --until 2016-12-31
+
+This makes the following assumptions:
+
+* you don't work on Saturday or Sunday (PRs welcome!)
+* your office hours are 0900-1700 (see help for configurable options here)
+* you are only considered on-call if the elapsed time exceeds some number
+  of hours (again, see help for configurability)
 
 ### export JSON of all incidents since November 1
 

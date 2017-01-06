@@ -82,9 +82,7 @@ module PDPoke
     desc 'users', 'retrieve users in the configured team(s)'
     def users
       u = paginate_all('users',:team_ids => $context.teams)
-      u.each do |user|
-        puts "#{user.name} <#{user.email}>"
-      end
+      puts u.to_json
     end
 
     desc 'incidents', 'retrieve incidents for the configured team(s)'

@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Poke the PagerDuty API}
   spec.description   = %q{Poke the PagerDuty API}
   spec.homepage      = "https://github.com/fairfaxmedia/pdpoke"
-  spec.license       = "MIT"
+  spec.license       = "Apache-2.0"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
